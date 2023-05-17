@@ -11,7 +11,6 @@ import (
 
 func TestProcess(t *testing.T) {
 	params := algorithm.Setup(256)
-	fmt.Println(params.Curve.Params().N)
 
 	ak := algorithm.ExtractAK(params, []string{"a", "b", "c", "d"})
 	fmt.Println(ak.SecretKey)
@@ -28,10 +27,10 @@ func TestProcess(t *testing.T) {
 func TestSign(t *testing.T) {
 	params := algorithm.Setup(256)
 	fmt.Println(params.Curve.Params().N)
-	ori := "80848746029104293953772004333084988230793558049441846281290986991604797601500"
+	ori := "33334379165350855288572099166513648052384945162859520169461100059092300124119"
 	sk, _ := new(bigint.BigInt).SetString(ori, 10)
 
-	sig := algorithm.Sign(params, []byte("DSCABS.FuncXXX1"), sk)
+	sig := algorithm.Sign(params, []byte("3:tom:CatContract:FuncXXX1"), sk)
 
 	fmt.Println(sig.S, sig.R)
 

@@ -3,6 +3,7 @@ package compoments
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/232425wxy/dscabs/algorithm"
@@ -10,7 +11,7 @@ import (
 	"github.com/232425wxy/dscabs/ecdsa/bigint"
 )
 
-func GateKeeper(params *algorithm.SystemParams, userID string, contractName, functionName string, sig string) (bool, error) {
+func GateKeeper(params *algorithm.SystemParams, times int, userID string, contractName, functionName string, sig string) (bool, error) {
 	if userID == "" {
 		return false, errors.New("user id must be different from \"\"")
 	}
@@ -47,7 +48,7 @@ func GateKeeper(params *algorithm.SystemParams, userID string, contractName, fun
 	R, _ := new(bigint.BigInt).SetString(sp[1], 10)
 	signature := &ecdsa.EllipticCurveSignature{S: S, R: R}
 
-	fullName := strings.Join([]string{contractName, functionName}, ".")
+	fullName := strings.Join([]string{strconv.Itoa(times), userID, contractName, functionName}, ":")
 	if ok := algorithm.Verify(params, ak.PublicKey, pk, []byte(fullName), signature); ok {
 		return true, nil
 	} else {

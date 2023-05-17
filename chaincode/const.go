@@ -6,6 +6,7 @@ const (
 	DSCABSMSK    = "DSCABS_MSK"
 	AttributeKey = "AttributeKey"
 	PolicyKey    = "PolicyKey"
+	Log    = "AccessLog"
 )
 
 func AKTag(userID string) string {

@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	gateKeeper, err := contractapi.NewChaincode(&chaincode.Gatekeeper{})
+	gateKeeper, err := contractapi.NewChaincode(&chaincode.DSCABS{})
 	if err != nil {
 		log.Panicf("Error creating DSCABS chaincode: %v", err)
 	}

@@ -12,13 +12,16 @@ import (
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
 
-type Gatekeeper struct {
+type DSCABS struct {
 	contractapi.Contract
-	ContractName string
 }
 
-func (s *Gatekeeper) InitLedger(ctx contractapi.TransactionContextInterface, sl string, contractName string) error {
-	s.ContractName = contractName
+type AccessLog struct {
+	Log map[string]int `json:"log"`
+}
+
+func (s *DSCABS) InitLedger(ctx contractapi.TransactionContextInterface, sl string) error {
+
 	securityLevel, _ := strconv.Atoi(sl)
 
 	params := algorithm.Setup(securityLevel)
@@ -33,10 +36,21 @@ func (s *Gatekeeper) InitLedger(ctx contractapi.TransactionContextInterface, sl 
 		return err
 	}
 
+	al := AccessLog{Log: make(map[string]int)}
+	alJSON, err := json.Marshal(al)
+	if err != nil {
+		return err
+	}
+
+	err = ctx.GetStub().PutState(Log, alJSON)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func (s *Gatekeeper) ExtractAK(ctx contractapi.TransactionContextInterface, userID string, attributes string) (string, error) {
+func (s *DSCABS) ExtractAK(ctx contractapi.TransactionContextInterface, userID string, attributes string) (string, error) {
 	if userID == "" {
 		return "", errors.New("user id must be different from \"\"")
 	}
@@ -79,7 +93,7 @@ func (s *Gatekeeper) ExtractAK(ctx contractapi.TransactionContextInterface, user
 	return ak.SecretKey.String(), nil
 }
 
-func (s *Gatekeeper) GenPK(ctx contractapi.TransactionContextInterface, contractName string, functionName string, policy string) error {
+func (s *DSCABS) GenPK(ctx contractapi.TransactionContextInterface, contractName string, functionName string, policy string) error {
 	if contractName == "" {
 		return errors.New("contract name must be different from \"\"")
 	}
@@ -109,7 +123,7 @@ func (s *Gatekeeper) GenPK(ctx contractapi.TransactionContextInterface, contract
 	return nil
 }
 
-func (s *Gatekeeper) Access(ctx contractapi.TransactionContextInterface, userID string, contractName string, functionName string, sig string) (bool, error) {
+func (s *DSCABS) Access(ctx contractapi.TransactionContextInterface, userID string, contractName string, functionName string, sig string) (bool, error) {
 	params := &algorithm.SystemParams{Curve: new(elliptic.CurveParams)}
 
 	paramsJSON, err := ctx.GetStub().GetState(DSCABSMSK)
@@ -122,5 +136,34 @@ func (s *Gatekeeper) Access(ctx contractapi.TransactionContextInterface, userID 
 		return false, err
 	}
 
-	return compoments.GateKeeper(params, userID, contractName, functionName, sig)
+	al := &AccessLog{}
+
+	alJSON, err := ctx.GetStub().GetState(Log)
+	if err != nil {
+		return false, err
+	}
+
+	err = json.Unmarshal(alJSON, al)
+	if err != nil {
+		return false, err
+	}
+
+	if _, ok := al.Log[userID]; !ok {
+		al.Log[userID] = 0
+	}
+
+	times := al.Log[userID] + 1
+	al.Log[userID] = times
+
+	alJSON, err = json.Marshal(*al)
+	if err != nil {
+		return false, err
+	}
+
+	err = ctx.GetStub().PutState(Log, alJSON)
+	if err != nil {
+		return false, err
+	}
+
+	return compoments.GateKeeper(params, times, userID, contractName, functionName, sig)
 }

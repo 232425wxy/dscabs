@@ -4,6 +4,7 @@ import (
 	"crypto/elliptic"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -166,4 +167,25 @@ func (s *DSCABS) Access(ctx contractapi.TransactionContextInterface, userID stri
 	}
 
 	return compoments.GateKeeper(params, times, userID, contractName, functionName, sig)
+}
+
+func (s *DSCABS) GetAccessLog(ctx contractapi.TransactionContextInterface, userID string) (string, error) {
+	al := &AccessLog{}
+
+	alJSON, err := ctx.GetStub().GetState(Log)
+	if err != nil {
+		return "", err
+	}
+
+	err = json.Unmarshal(alJSON, al)
+	if err != nil {
+		return "", err
+	}
+
+	log, ok := al.Log[userID]
+	if !ok {
+		return "", fmt.Errorf("there is no such user: [%s]", userID)
+	}
+
+	return strconv.Itoa(log), nil
 }

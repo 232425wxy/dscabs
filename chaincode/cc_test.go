@@ -27,10 +27,10 @@ func TestProcess(t *testing.T) {
 func TestSign(t *testing.T) {
 	params := algorithm.Setup(256)
 	fmt.Println(params.Curve.Params().N)
-	ori := "33334379165350855288572099166513648052384945162859520169461100059092300124119"
+	ori := "34454378694695527068725690557774082674590862555097716080739531125196898673466"
 	sk, _ := new(bigint.BigInt).SetString(ori, 10)
 
-	sig := algorithm.Sign(params, []byte("3:tom:CatContract:FuncXXX1"), sk)
+	sig := algorithm.Sign(params, []byte("20:tom:DogContract:GetDog"), sk)
 
 	fmt.Println(sig.S, sig.R)
 
